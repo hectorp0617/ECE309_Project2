@@ -6,6 +6,8 @@ int main() {
     Conversation conversation;
     assert(conversation.size() == 0);
 
+    assert(conversation.begin() == conversation.end());
+
     bool caught = false;
 
     try {

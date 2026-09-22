@@ -24,6 +24,19 @@ public:
         return data_[i];
     }
 
+    const Message* begin() const noexcept {
+        // Return a pointer to the first message in the conversation
+        return data_;
+    }
+
+    const Message* end() const noexcept {
+        if (size_ == 0) {
+            return data_;
+        }
+        // Return a pointer to one past the last message in the conversation
+        return data_ + size_;
+    }
+
 private:
     Message* data_ = nullptr;
     std::size_t size_ = 0;      // Number of messages in the conversation
