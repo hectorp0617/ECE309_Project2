@@ -92,6 +92,7 @@ int main() {
 
     const Message* move_original_address = move_source.begin();
 
+    // Move assignment
     move_assigned = std::move(move_source);
 
     assert(move_assigned.begin() == move_original_address);
@@ -99,5 +100,35 @@ int main() {
     assert(move_assigned.at(0).content() == "Message 2");
     assert(move_source.size() == 0);
     assert(move_source.begin() == nullptr);
+
+    move_source.append(Message(Role::User, "Message 3"));
+    assert(move_source.size() == 1);
+    assert(move_source.at(0).content() == "Message 3");
+
+    //Destination holds transferred date
+    assert(move_assigned.size() == 1);
+    assert(move_assigned.at(0).content() == "Message 2");
+    assert(move_source.begin() != move_assigned.begin());
+
+    //Testing self-assignment for copy assignment operator
+    const Message* before_self_assign_address = move_assigned.begin();
+    move_assigned = move_assigned; // Self-assignment
+    assert(move_assigned.begin() == before_self_assign_address);
+    assert(move_assigned.size() == 1);
+    assert(move_assigned.at(0).content() == "Message 2");
+
+    //Moving the object to itself should not change its state
+    const Message* before_self_move_address = move_assigned.begin();
+    move_assigned = std::move(move_assigned); // Self-move assignment
+    assert(move_assigned.begin() == before_self_move_address);
+    assert(move_assigned.size() == 1);
+    assert(move_assigned.at(0).content() == "Message 2");
+    
+
+
+
+
+
+
 
 }
