@@ -33,7 +33,7 @@ public:
     size_ = other.size_;
     capacity_ = other.size_;
 }
-
+    //
     Conversation& operator=(const Conversation& other) {
         
         // Check for self-assignment
@@ -51,8 +51,38 @@ public:
     }
 
 
+    // Move constructor to transfer ownership of resources from another Conversation
+    Conversation(Conversation&& other) noexcept {
+        
+        data_ = other.data_; // Transfer ownership of the data pointer
+        size_ = other.size_; // Transfer the size
+        capacity_ = other.capacity_; // Transfer the capacity
 
-    
+        // Reset the moved-from object to a valid state
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
+    }
+
+    Conversation& operator=(Conversation&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    delete[] data_;
+
+    data_ = other.data_;
+    size_ = other.size_;
+    capacity_ = other.capacity_;
+
+    other.data_ = nullptr;
+    other.size_ = 0;
+    other.capacity_ = 0;
+
+    return *this;
+}
+
+
     // Destructor to clean up allocated memory
     ~Conversation() {
         delete[] data_;

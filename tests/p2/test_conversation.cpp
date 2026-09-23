@@ -68,5 +68,36 @@ int main() {
         assert(assigned.at(i).role() == conversation.at(i).role());
     }
 
+    // Test move constructor
+    Conversation source;
+    source.append(Message(Role::User, "Message 1"));
+    const Message* original_address = source.begin();
+
+    Conversation moved(std::move(source));
+
+    assert(moved.begin() == original_address);
+    assert(moved.size() == 1);
+    assert(moved.at(0).content() == "Message 1");
+
+    assert(source.size() == 0);
+    assert(source.begin() == nullptr);
+    assert(source.begin() == source.end());
+
+    // Test move assignment operator
+    Conversation move_source;
+    move_source.append(Message(Role::User, "Message 2"));
+
+    Conversation move_assigned;
+    move_assigned.append(Message(Role::Assistant, "This will be replaced"));
+
+    const Message* move_original_address = move_source.begin();
+
+    move_assigned = std::move(move_source);
+
+    assert(move_assigned.begin() == move_original_address);
+    assert(move_assigned.size() == 1);
+    assert(move_assigned.at(0).content() == "Message 2");
+    assert(move_source.size() == 0);
+    assert(move_source.begin() == nullptr);
 
 }
