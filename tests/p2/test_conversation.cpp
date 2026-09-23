@@ -24,7 +24,7 @@ int main() {
     conversation.append(Message(Role::Assistant, "Hi there!"));
 
 
-    Check size after appending messages
+    //Check size after appending messages
     assert(conversation.size() == 3);
     assert(conversation.at(0).content() == "Instructions");
     assert(conversation.at(1).content() == "Hello");
@@ -34,7 +34,15 @@ int main() {
     assert(conversation.at(2).role() == Role::Assistant);
 
 
+    Conversation copied(conversation);
 
+    assert(copied.size() == conversation.size());
+    assert (copied.begin() != conversation.begin());
+
+    for (std::size_t i = 0; i < conversation.size(); ++i) {
+        assert(copied.at(i).content() == conversation.at(i).content());
+        assert(copied.at(i).role() == conversation.at(i).role());
+    }
 
 
         //COMMMENT OUT THE FOLLOWING LINE, USED TO SEE ERROR MESSAGES
@@ -45,5 +53,20 @@ int main() {
     // assert(conversation.at(0).role() == Role::User);
     // assert(conversation.at(1).role() == Role::System);
     // assert(conversation.at(2).role() == Role::Assistant);
+
+
+    // Test assignment operator
+    Conversation assigned;
+    assigned.append(Message(Role::User, "This will be replaced"));
+    assigned = conversation;
+
+    assert(assigned.size() == conversation.size());
+    assert (assigned.begin() != conversation.begin());
+
+    for (std::size_t i = 0; i < conversation.size(); ++i) {
+        assert(assigned.at(i).content() == conversation.at(i).content());
+        assert(assigned.at(i).role() == conversation.at(i).role());
+    }
+
 
 }

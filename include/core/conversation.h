@@ -5,10 +5,53 @@
 #include "core/message.h"
 
 #include <stdexcept>
+#include <utility> // For std::swap
 
 class Conversation {
 public:
+
+    // Default constructor initializes an empty conversation
     Conversation() = default;
+
+    // Copy constructor to create a new Conversation as a copy of another
+    Conversation(const Conversation& other) {
+    if (other.size_ == 0) {
+        return;
+    }
+
+    data_ = new Message[other.size_];
+
+    try {
+        for (std::size_t i = 0; i < other.size_; ++i) {
+            data_[i] = other.data_[i];
+        }
+    } catch (...) {
+        delete[] data_;
+        throw;
+    }
+
+    size_ = other.size_;
+    capacity_ = other.size_;
+}
+
+    Conversation& operator=(const Conversation& other) {
+        
+        // Check for self-assignment
+        if (this == &other) {
+            return *this; // Handle self-assignment
+        }
+        
+        Conversation replacement(other); // Create a copy of the other conversation
+        std::swap(data_, replacement.data_); // Swap the data pointers
+        std::swap(size_, replacement.size_); // Swap the sizes
+        std::swap(capacity_, replacement.capacity_); // Swap the capacities
+
+
+        return *this;
+    }
+
+
+
     
     // Destructor to clean up allocated memory
     ~Conversation() {
@@ -77,6 +120,10 @@ private:
     Message* data_ = nullptr;
     std::size_t size_ = 0;      // Number of messages in the conversation
     std::size_t capacity_ = 0;      // Capacity of slots allocated for messages in the conversation
+
+
+
+    
 };
 
 
