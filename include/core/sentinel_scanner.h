@@ -24,9 +24,11 @@ public:
         Out feed(std::string_view chunk);
         Out flush();
 
-private:
+private: 
     std::string sentinel_;
     std::string pending_;
+
+    friend struct SentinelScannerTest; // Grant access to the test struct for testing purposes
 
 };
 

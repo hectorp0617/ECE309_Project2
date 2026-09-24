@@ -3,6 +3,13 @@
 
 #include "core/sentinel_scanner.h"
 
+// Test struct to access private members of SentinelScanner for testing purposes
+struct SentinelScannerTest {
+    static std::size_t get_pending_size(const SentinelScanner& scanner) {
+        return scanner.pending_.size();
+    }
+};
+
 int main() {
     // Test the SentinelScanner with a sentinel string
     SentinelScanner scanner("END");
@@ -98,8 +105,18 @@ int main() {
     assert(final_result.sentinel_found == false);
 
     assert(feed_result.safe_text + final_result.safe_text == input_text);
+    //end of false alarm test
 
+    //Test feeding a large amount of data without the sentinel to ensure no false positives occur
+    SentinelScanner empty_sentinel_scanner2(sentinel);
+    const std::string pattern = "<|end_";
+    const std::size_t total = 4 * 1024 * 1024; // 4 MB
 
+    for (std::size_t i = 0; i < total; ++i) {
+        auto result = empty_sentinel_scanner2.feed(pattern.substr(i % pattern.size(), 1)); // Feed one character at a time
+        assert(result.sentinel_found == false);
+        assert(SentinelScannerTest::get_pending_size(empty_sentinel_scanner2) <= sentinel.size() - 1);
+    }
 
     return 0;
     }
