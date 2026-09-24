@@ -3,12 +3,17 @@
 
 #include <string>
 #include <string_view>
+#include <stdexcept>
 
 class SentinelScanner {
 public:
     // Constructor that initializes the scanner with a string view
     explicit SentinelScanner(std::string sentinel) 
-    : sentinel_(sentinel){}
+    : sentinel_(sentinel){
+    if (sentinel_.empty()) {
+            throw std::invalid_argument("Sentinel cannot be empty");
+    }
+    }
 
         struct Out {
             std::string safe_text;
