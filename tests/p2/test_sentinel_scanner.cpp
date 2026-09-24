@@ -74,14 +74,30 @@ int main() {
     auto flush_result = partial_scanner.flush();
 
     assert(part1.sentinel_found == false);
-    assert(flush_result.sentinel_found == false);\
+    assert(flush_result.sentinel_found == false);
 
-    assert(part1.sentinel_found + flush_result.sentinel_found == false);
+    assert(part1.safe_text + flush_result.safe_text == "Hello, EN");
 
     auto second_flush_result = partial_scanner.flush();
+    assert(second_flush_result.safe_text.empty()); 
 
     assert(second_flush_result.sentinel_found == false);
+    //End of partial marker test
 
+
+
+
+    //Test false alarm with empty sentinel
+    SentinelScanner empty_sentinel_scanner(sentinel);
+    const std::string input_text = "Hello <|end_world|> goodbye.";
+
+    auto feed_result = empty_sentinel_scanner.feed(input_text);
+    auto final_result = empty_sentinel_scanner.flush();
+    
+    assert(feed_result.sentinel_found == false);
+    assert(final_result.sentinel_found == false);
+
+    assert(feed_result.safe_text + final_result.safe_text == input_text);
 
 
 
