@@ -1,4 +1,5 @@
 #include <cassert>
+#include <string>
 
 #include "core/sentinel_scanner.h"
 
@@ -31,6 +32,21 @@ int main() {
     auto result5 = scanner2.feed("D");
     assert(result5.safe_text.empty());
     assert(result5.sentinel_found == true);
+
+    const std::string sentinel = "<|end_conversation|>";
+    const std::string text = "Goodbye." + sentinel;
+
+    for (std::size_t i = 0; i <= text.size(); ++i) {
+        SentinelScanner boundary_scanner(sentinel);
+
+        auto first_part = boundary_scanner.feed(text.substr(0, i));          // Feed the first part of the text  
+        auto second_part = boundary_scanner.feed(text.substr(i));     // Everything after the first part of the text
+
+        
+        assert(second_part.sentinel_found || first_part.sentinel_found);
+
+        assert(first_part.safe_text + second_part.safe_text == "Goodbye.");
+    }
 
     return 0;
 
