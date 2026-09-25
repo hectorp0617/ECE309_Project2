@@ -163,5 +163,22 @@ int main() {
     // Verify the contents of the messages after growth
     assert(growth.at(0).content() == "Message 1");
 
+    // Test copying an empty conversation
+    Conversation empty;
+    Conversation empty_copy(empty);
 
+    assert(empty_copy.size() == 0);
+    assert(empty_copy.begin() == empty_copy.end());
+
+    // Test assigning an empty conversation to a non-empty one
+    Conversation cleared;
+    cleared.append(Message(Role::User, "Message 1"));
+    cleared = empty; // Assigning an empty conversation to a non-empty one
+    assert(cleared.size() == 0);
+    assert(cleared.begin() == cleared.end());
+
+
+
+    
+    return 0;
 }
