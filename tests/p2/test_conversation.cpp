@@ -2,6 +2,12 @@
 #include <stdexcept>
 #include "core/conversation.h"
 
+struct ConversationTest {
+    static std::size_t get_capacity(const Conversation& conversation) {
+        return conversation.capacity_;
+    }
+};
+
 int main() {
     Conversation conversation;
     assert(conversation.size() == 0);
@@ -124,11 +130,38 @@ int main() {
     assert(move_assigned.size() == 1);
     assert(move_assigned.at(0).content() == "Message 2");
     
+    // Test appending messages to trigger capacity growth
+    Conversation growth;
+    assert(growth.size() == 0);
+    assert(ConversationTest::get_capacity(growth) == 0);
 
+    // Append First message
+    growth.append(Message(Role::User, "Message 1"));
+    assert(growth.size() == 1);
+    assert(ConversationTest::get_capacity(growth) == 1);
 
+    // Append Second Message
+    growth.append(Message(Role::User, "Message 2"));
+    assert(growth.size() == 2);
+    assert(ConversationTest::get_capacity(growth) == 2);
 
+    // Append Third Message
+    growth.append(Message(Role::User, "Message 3"));
+    assert(growth.size() == 3);
+    assert(ConversationTest::get_capacity(growth) == 4); // Capacity should double
 
+    // Append Fourth Message
+    growth.append(Message(Role::User, "Message 4"));
+    assert(growth.size() == 4);
+    assert(ConversationTest::get_capacity(growth) == 4); // Capacity remains the same
 
+    // Append Fifth Message
+    growth.append(Message(Role::User, "Message 5"));
+    assert(growth.size() == 5);
+    assert(ConversationTest::get_capacity(growth) == 8); // Capacity should double
+
+    // Verify the contents of the messages after growth
+    assert(growth.at(0).content() == "Message 1");
 
 
 }

@@ -151,7 +151,7 @@ private:
     std::size_t size_ = 0;      // Number of messages in the conversation
     std::size_t capacity_ = 0;      // Capacity of slots allocated for messages in the conversation
 
-
+    friend struct ConversationTest; // Grant access to the test struct for testing purposes
 
     
 };
