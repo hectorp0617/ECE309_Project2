@@ -25,6 +25,17 @@ struct ConversationTest {
     }
 };
 
+//assert pending_ never exceeds sentinel.size() -1...
+struct SentinelScannerTest { 
+    static std::size_t get_pending_size(const SentinelScanner& scanner) { // buffer length
+        return scanner.pending_.size(); //return char count
+    } 
+};
+
+
+
+//END OF HELPER FUNCTIONS
+
 void test_empty_conversation() {
     Conversation local;
     assert(local.size() == 0);      // Ensure that the size of an empty conversation is 0
@@ -256,6 +267,25 @@ void test_false_alarm() { // Ensure scanner dosent trigger on partial matches
 
 } 
 
+//assert pending_ never exceeds sentinel.size() -1...
+
+void test_bounded_memory() { 
+    const std::string sentinel = "<|end_conversation|>"; // marker
+    const std::string pattern = "<|end_"; // repeating input
+    const std::size_t total = 4 * 1024 * 1024; 
+
+    SentinelScanner scanner(sentinel); //scanner
+
+    //iterate through e/a char
+    for (std::size_t i = 0; i < total; ++i) { 
+        auto result = scanner.feed(pattern.substr(i % pattern.size(), 1));// one char read
+        //deny any false matches found
+        assert(!result.sentinel_found); 
+        //bound check
+        assert(SentinelScannerTest::get_pending_size(scanner) <= sentinel.size() - 1); 
+    } 
+} 
+
    
 
 
@@ -278,6 +308,7 @@ int main() {
     single_char_test();
     test_partial_flush();
     test_false_alarm();
+    test_bounded_memory();
 
 
     return 0;
