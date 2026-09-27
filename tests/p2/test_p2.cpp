@@ -147,15 +147,16 @@ void test_move_assign() {
 
 //Capacity growth test function
 void test_cap_growth() {
-// Create conversation.
+
+// Create conversation
     Conversation conversation;
     assert(conversation.size() == 0);
     assert(ConversationTest::get_capacity(conversation) == 0);
 
-    // Expected capacities.
+    // Anticipated capacities
     const std::size_t expected[] = {1, 2, 4, 4, 8};
 
-    // Add messages
+    // Insert messages
     for (std::size_t i = 0; i < 5; ++i) {
         conversation.append(
             Message(Role::User, std::to_string(i))
@@ -173,13 +174,29 @@ void test_cap_growth() {
     }
 }
 
+//text scanner
+void text_scanner() {
+    //Scanner
+    SentinelScanner scanner("|<end_conversation|>");
+    const std::string input = "Ordinary text";
+
+    //Do something with the text
+    auto result = scanner.feed(input);
+    auto remaining = scanner.flush();
+
+    //Verify results
+    assert(result.sentinel_found == false);
+    assert(remaining.sentinel_found == false);
+    assert(result.safe_text + remaining.safe_text == input);
+}
+
    
 
 
 int main() {
     // TODO: write your tests here.
     //All function calls to the above tests
-    //TODO: Finish remaining tests (Capacity growth,)
+    //TODO: Finish remaining tests (Capacity growth, plain text scanner, )
 
     test_empty_conversation();
     test_ec_bounds();
@@ -189,6 +206,7 @@ int main() {
     test_move_constructor();
     test_move_assign();
     test_cap_growth();
+    text_scanner();
 
     return 0;
 }
