@@ -19,6 +19,7 @@
 #include <utility>
 #include <sstream>      //string input streams
 #include <memory>
+#include <fstream>      //file output
 
 //Helper Function to test
 struct ConversationTest {
@@ -387,6 +388,94 @@ void test_sentinel_found() {
     assert(output.text.find("SECOND_REPLY") == std::string::npos); 
 } 
 
+
+
+//Pressing ctrl-D (EOF) ends the conversation and still wrties the transcript
+void test_EOF() { // Define the test.
+    HarnessConfig config; 
+    config.max_turns = 5; // 5 turns
+
+    auto model = std::make_unique<ScriptedModelClient>(
+        "scripts/test_turn_limit.script");
+
+    Harness harness(std::move(model), config); 
+    TestInput input("Hello\n"); // input line
+    TestOutput output; // Capture output
+
+    auto reason = harness.run(input, output); // continue untill no more input
+
+    //ASSERTIONS
+    assert(reason.kind == StopReason::Kind::UserExit); // verify exit reason
+    assert(harness.conversation().size() == 2); // one was stroed
+    assert(harness.conversation().at(0).content() == "Hello"); // Check user message.
+    assert(harness.conversation().at(1).content() == "First reply."); // assistan reply
+    assert(output.text.find("Second reply.") == std::string::npos); // no more replies generated?
+} 
+
+
+
+
+//Save a mock conversation, load it via the provided ReplayModelClient, assert identical playback
+void test_playback() { 
+    Conversation original; // mock conversation
+    original.append(Message(Role::User, "Hello")); // first input
+    original.append(Message(Role::Assistant, "Hi")); // first reply
+    original.append(Message(Role::User, "Bye")); //second input
+    original.append(Message(Role::Assistant, "Goodbye.<|end_conversation|>")); // last reply
+
+    const std::string path = "build/test_round_trip.txt"; // file location.
+    std::ofstream file(path); // transcript
+    assert(file.is_open()); // file was opened?
+
+
+    //visit each massage
+    for (std::size_t i = 0; i < original.size(); ++i) { 
+        if (i != 0) { 
+            file << "---\n"; // block seperator
+        } 
+
+        //Read message 
+        const Message& message = original.at(i); 
+        const char* role = "assistant"; // role 
+        if (message.role() == Role::User) { 
+            role = "user"; // user role
+        } else if (message.role() == Role::System) { // Check for message
+            role = "system"; // ststem label
+        } 
+
+
+
+        //write role and text
+        file << "role: " << role << "\n"; 
+        file << message.content() << "\n"; 
+    } 
+
+    file.close(); // close file
+    assert(!file.fail()); // succesfully saved?
+
+    auto model = std::make_unique<ReplayModelClient>(path); // load transcript
+    HarnessConfig config;
+    config.max_turns = 5; // enough turns (5)
+    Harness harness(std::move(model), config); //replay harness
+    TestInput input("Hello\nBye\n"); // Original inputs
+    TestOutput output; // Capture
+
+    auto reason = harness.run(input, output); // repllay conversataion
+    assert(reason.kind == StopReason::Kind::Sentinel);
+
+    const Conversation& replayed = harness.conversation(); // Read  replayed history
+    assert(replayed.size() == original.size()); // 
+
+    //iterate through each message
+    for (std::size_t i = 0; i < original.size(); ++i) { 
+
+        //assertions to compare roles and texts (content)
+        assert(replayed.at(i).role() == original.at(i).role());
+        assert(replayed.at(i).content() == original.at(i).content()); 
+    } 
+
+    assert(output.text == "you> assistant> Hi\nyou> assistant> Goodbye.\n"); 
+} 
    
 
 
@@ -413,6 +502,9 @@ int main() {
     test_moved_from_reuse();
     test_turn_limit();
     test_sentinel_found();
+    test_EOF();
+    test_playback();
+    
 
 
     return 0;
