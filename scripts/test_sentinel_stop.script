@@ -1,0 +1,6 @@
+chunk: 1
+role: assistant
+Goodbye.<|end_conversation|>SHOULD_NOT_APPEAR
+---
+role: assistant
+SECOND_REPLY
