@@ -227,6 +227,19 @@ void single_char_test() {
     assert(collected == "Goodbye.");      //check initial text remains
 }
 
+void test_partial_flush(){
+    SentinelScanner scanner("END");     //stop marker
+    const std::string input = "Hello, EN";      //Ending with incomplete marker
+
+    //Input and release
+    auto result = scanner.feed(input);
+    auto remaining = scanner.flush();
+
+    assert(!result.sentinel_found);     //no incomplete marker was found
+    assert(!remaining.sentinel_found);      //no marker in regards to flush
+    assert(result.safe_text + remaining.safe_text == input);
+}
+
    
 
 
@@ -246,6 +259,7 @@ int main() {
     text_scanner();
     split_boundary_test();
     single_char_test();
+    test_partial_flush();
 
 
     return 0;
