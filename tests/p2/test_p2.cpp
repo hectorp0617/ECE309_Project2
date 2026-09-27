@@ -196,7 +196,7 @@ void split_boundary_test () {
     const std::string sentinel = "<|end_conversation|>";
     const std::string text = "Goodbye." + sentinel;      //Input
 
-    //test for every split point
+    //test for every possible split point
     for(std::size_t i = 0; i <= text.size(); i++){
         SentinelScanner scanner(sentinel);      //new scanner
 
@@ -205,8 +205,26 @@ void split_boundary_test () {
 
         //assertions
         assert(one.sentinel_found || two.sentinel_found);       //either found marker
-        assert(one.safe_text + two.safe_text == "Goodbye.");     //combined output
+        assert(one.safe_text + two.safe_text == "Goodbye.");     //combined output (ENSURE EQUAL)
     }
+}
+
+void single_char_test() {
+    const std::string sentinel = "<|end_conversation|>";        //Stop marker
+    const std::string text = "Goodbye." + sentinel;     //Build input
+    SentinelScanner scanner(sentinel);      //scanner for stream
+    std::string collected;      // returned text
+    bool found = false;     // Track whether marker detected
+
+    //iterate thorugh each char
+    for (std::size_t i = 0; i < text.size(); i++){
+        auto result = scanner.feed(text.substr(i,1));       //insert one char
+        collected += result.safe_text;      //gather safe text
+        found = found || result.sentinel_found;     //recall detection
+    }
+
+    assert(found);      //Check marker detected 
+    assert(collected == "Goodbye.");      //check initial text remains
 }
 
    
@@ -227,5 +245,8 @@ int main() {
     test_cap_growth();
     text_scanner();
     split_boundary_test();
+    single_char_test();
+
+
     return 0;
 }
