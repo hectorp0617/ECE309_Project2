@@ -18,6 +18,13 @@
 #include <stdexcept>
 #include <utility>
 
+//Helper Function to test
+struct ConversationTest {
+    static std::size_t get_capacity(const Conversation& conversation) {
+        return conversation.capacity_;
+    }
+};
+
 void test_empty_conversation() {
     Conversation local;
     assert(local.size() == 0);      // Ensure that the size of an empty conversation is 0
@@ -114,7 +121,6 @@ void test_move_constructor() {
 }
 
 void test_move_assign() {
-    //Create source
     Conversation source;
     source.append(Message(Role::User, "Check"));        //append message
 
@@ -122,26 +128,59 @@ void test_move_assign() {
     Conversation destination;
     destination.append(Message(Role::User, "old"));       //Append message
 
-    const Message* orig_addr = source.begin();      //Save Adress
+    const Message* orig_addr = source.begin();      //Save Address
 
-    destination = std::move(source);        //move contents here
+    destination = std::move(source);        //Store contents here
 
-    //Check and ensure destination
+    // ensure destination
     assert(destination.begin() == orig_addr);
     assert(destination.size() == 1);
     assert(destination.at(0).content() == "Check");
     assert(destination.at(0).role() == Role::User);
 
-    // Check source.
+    //Source Check
     assert(source.size() == 0);
     assert(source.begin() == nullptr);
     assert(source.begin() == source.end());
 }
+
+
+//Capacity growth test function
+void test_cap_growth() {
+// Create conversation.
+    Conversation conversation;
+    assert(conversation.size() == 0);
+    assert(ConversationTest::get_capacity(conversation) == 0);
+
+    // Expected capacities.
+    const std::size_t expected[] = {1, 2, 4, 4, 8};
+
+    // Add messages
+    for (std::size_t i = 0; i < 5; ++i) {
+        conversation.append(
+            Message(Role::User, std::to_string(i))
+        );
+
+        // Ensure size and capacity
+        assert(conversation.size() == i + 1);
+        assert(ConversationTest::get_capacity(conversation) == expected[i]);
+
+        // Check stored messages
+        for (std::size_t j = 0; j <= i; ++j) {
+            assert(conversation.at(j).content() == std::to_string(j));
+            assert(conversation.at(j).role() == Role::User);
+        }
+    }
+}
+
    
 
 
 int main() {
     // TODO: write your tests here.
+    //All function calls to the above tests
+    //TODO: Finish remaining tests (Capacity growth,)
+
     test_empty_conversation();
     test_ec_bounds();
     test_order_after();
@@ -149,6 +188,7 @@ int main() {
     test_copy_assignment(); 
     test_move_constructor();
     test_move_assign();
+    test_cap_growth();
 
     return 0;
 }
