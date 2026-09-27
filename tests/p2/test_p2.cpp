@@ -284,6 +284,23 @@ void test_bounded_memory() {
         //bound check
         assert(SentinelScannerTest::get_pending_size(scanner) <= sentinel.size() - 1); 
     } 
+}
+
+//Safe to destroy or reassign
+void test_moved_from_reuse() { 
+    Conversation source; // source.
+    source.append(Message(Role::User, "Original")); // append message
+
+    Conversation destination(std::move(source)); // move message
+    source.append(Message(Role::User, "New")); // RECYCLE 
+
+    //assertions
+    assert(source.size() == 1); // message count
+    assert(source.at(0).content() == "New"); // Check contents
+    assert(destination.size() == 1); 
+
+    assert(destination.at(0).content() == "Original");
+    assert(source.begin() != destination.begin()); 
 } 
 
    
@@ -309,6 +326,7 @@ int main() {
     test_partial_flush();
     test_false_alarm();
     test_bounded_memory();
+    test_moved_from_reuse();
 
 
     return 0;
