@@ -240,13 +240,30 @@ void test_partial_flush(){
     assert(result.safe_text + remaining.safe_text == input);
 }
 
+//False alarm
+void test_false_alarm() { // Ensure scanner dosent trigger on partial matches
+
+    SentinelScanner scanner("<|end_conversation|>"); // Real marker
+    const std::string input = "Hello <|end_world|> goodbye."; // duplicat marker
+
+    //proccess and release
+    auto result = scanner.feed(input); 
+    auto remaining = scanner.flush(); 
+
+    assert(result.sentinel_found == false); // No marker is matched
+    assert(!remaining.sentinel_found); // no mathc from the flush
+    assert(result.safe_text + remaining.safe_text == input); // all text was preserved
+
+} 
+
    
 
 
 int main() {
     // TODO: write your tests here.
     //All function calls to the above tests
-    //TODO: Finish remaining tests (Capacity growth, plain text scanner, split )
+    //TODO: Finish remaining tests (Capacity growth, plain text scanner, split, single char,... )
+
 
     test_empty_conversation();
     test_ec_bounds();
@@ -260,6 +277,7 @@ int main() {
     split_boundary_test();
     single_char_test();
     test_partial_flush();
+    test_false_alarm();
 
 
     return 0;
