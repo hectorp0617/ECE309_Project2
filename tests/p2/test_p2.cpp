@@ -190,13 +190,32 @@ void text_scanner() {
     assert(result.safe_text + remaining.safe_text == input);
 }
 
+//Split boundary tests
+void split_boundary_test () {
+    //Stop marker
+    const std::string sentinel = "<|end_conversation|>";
+    const std::string text = "Goodbye." + sentinel;      //Input
+
+    //test for every split point
+    for(std::size_t i = 0; i <= text.size(); i++){
+        SentinelScanner scanner(sentinel);      //new scanner
+
+        auto one = scanner.feed(text.substr(0,i));      //input text prior to split
+        auto two = scanner.feed(text.substr(i));        //split onward
+
+        //assertions
+        assert(one.sentinel_found || two.sentinel_found);       //either found marker
+        assert(one.safe_text + two.safe_text == "Goodbye.");     //combined output
+    }
+}
+
    
 
 
 int main() {
     // TODO: write your tests here.
     //All function calls to the above tests
-    //TODO: Finish remaining tests (Capacity growth, plain text scanner, )
+    //TODO: Finish remaining tests (Capacity growth, plain text scanner, split )
 
     test_empty_conversation();
     test_ec_bounds();
@@ -207,6 +226,6 @@ int main() {
     test_move_assign();
     test_cap_growth();
     text_scanner();
-
+    split_boundary_test();
     return 0;
 }
