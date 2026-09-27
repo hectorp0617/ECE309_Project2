@@ -17,6 +17,8 @@
 #include <cassert>
 #include <stdexcept>
 #include <utility>
+#include <sstream>      //string input streams
+#include <memory>
 
 //Helper Function to test
 struct ConversationTest {
@@ -32,9 +34,43 @@ struct SentinelScannerTest {
     } 
 };
 
+class TestInput : public InputSource { // provide input to harness
+public:
+    explicit TestInput(const std::string& text)
+        : input_(text) {} // store input
+
+    std::string read_line() override { // read next line
+        std::string line; 
+        if (!std::getline(input_, line)) { 
+            eof_ = true; // keep record of the end of the input
+        } 
+        return line; // return input
+    } 
+
+    bool is_eof() const override { // input state
+        return eof_; // return eof
+    } 
+
+private:
+    std::istringstream input_; // read stored text
+    bool eof_ = false; 
+}; 
+
+class TestOutput : public OutputSink { //harness output
+public:
+    std::string text; //store what was written
+
+    void write(std::string_view chunk) override { 
+        text.append(chunk); // add to stored text
+    } 
+}; 
 
 
 //END OF HELPER FUNCTIONS
+
+
+
+
 
 void test_empty_conversation() {
     Conversation local;
@@ -303,6 +339,54 @@ void test_moved_from_reuse() {
     assert(source.begin() != destination.begin()); 
 } 
 
+//Confirm provided loop stops with TurnLimi when conversation is used underneath it
+void test_turn_limit() {
+    HarnessConfig config;       //configuration
+    config.max_turns = 1;       //one turn
+
+    //scripted replies
+    auto model = std::make_unique<ScriptedModelClient>("scripts/test_turn_limit.script");
+
+    Harness harness(std::move(model), config); // Transfer to harness
+    TestInput input("Hello\nAnother question\n"); // two user messages.
+    TestOutput output; // Capture the output
+
+    auto reason = harness.run(input, output); 
+
+    //assertions
+    assert(reason.kind == StopReason::Kind::TurnLimit); // Check why it stopped.
+    assert(harness.conversation().size() == 2); // one user and one assistant message, total of 2
+
+    //check messages and reply
+    assert(harness.conversation().at(0).content() == "Hello"); 
+    assert(harness.conversation().at(1).content() == "First reply."); 
+    assert(output.text.find("Second reply.") == std::string::npos);
+}
+
+//Loop halts when SentinelScanner reports the sentinel found
+void test_sentinel_found() { 
+    HarnessConfig config; 
+    config.max_turns = 5; // 5 turns max
+    
+    //LOAD REPLIES
+    auto model = std::make_unique<ScriptedModelClient>("scripts/test_sentinel_stop.script"); 
+
+    Harness harness(std::move(model), config); // harness created
+    TestInput input("Bye\nAnother question\n"); // provide two inputs
+    TestOutput output; // get output
+
+    auto reason = harness.run(input, output); // Proceed with conversation
+
+    //ASSERTIONS
+    assert(reason.kind == StopReason::Kind::Sentinel); // Check stop reason
+    assert(harness.conversation().size() == 2); // only ONE turn completed
+    assert(harness.conversation().at(1).content() == "Goodbye.<|end_conversation|>"); // check stored reply
+    assert(output.text.find("Goodbye.") != std::string::npos); 
+    assert(output.text.find("<|end_conversation|>") == std::string::npos); // marker is hidden?
+    assert(output.text.find("SHOULD_NOT_APPEAR") == std::string::npos); // trailing text is removed
+    assert(output.text.find("SECOND_REPLY") == std::string::npos); 
+} 
+
    
 
 
@@ -327,6 +411,8 @@ int main() {
     test_false_alarm();
     test_bounded_memory();
     test_moved_from_reuse();
+    test_turn_limit();
+    test_sentinel_found();
 
 
     return 0;
