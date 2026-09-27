@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <stdexcept>
+#include <utility>
 
 void test_empty_conversation() {
     Conversation local;
@@ -30,9 +31,12 @@ void test_ec_bounds() {       //testing empty conversation bounds
     
     try {
         converasation.at(0);
-    } catch (const std::out_of_range) {
+    } catch (const std::out_of_range&) {        //Catch by refrence
         caught = true;
     }
+
+    assert(caught);
+
 } 
 
 void test_order_after (){
@@ -55,6 +59,59 @@ void test_order_after (){
 
 }
 
+void test_cc() {        //Test copy constructor
+    Conversation orig;
+    orig.append(Message(Role::User, "Hello"));
+    orig.append(Message(Role::Assistant, "Hi"));
+
+    Conversation copied(orig);
+
+    assert(copied.size() == orig.size());       //verify size
+    assert(copied.begin() != orig.begin());
+
+    for(std::size_t i = 0; i < orig.size(); i++) {
+        assert(copied.at(i).role() == orig.at(i).role());
+        assert(copied.at(i).content() == orig.at(i).content());
+    }
+}
+
+void test_copy_assignment() {
+    Conversation original;      //original conversation
+    original.append(Message(Role::User, "Hello"));
+    original.append(Message(Role::Assistant, "Hi"));
+
+    Conversation assigned;      
+    assigned.append(Message(Role::System, "Old contents"));
+
+    assigned = original;
+
+    assert(assigned.size() == original.size());     //veriy size
+    assert(assigned.begin() != original.begin());
+
+    //Cycle through roles and contents to verify equal to 
+    for (std::size_t i = 0; i < original.size(); ++i) {
+        assert(assigned.at(i).role() == original.at(i).role());
+        assert(assigned.at(i).content() == original.at(i).content());
+    }
+}
+
+void test_move_constructor() {
+    Conversation source;
+    source.append(Message(Role::User, "Moving"));
+
+    const Message* original_address = source.begin();
+
+    Conversation moved(std::move(source));
+
+    assert(moved.begin() == original_address);
+    assert(moved.size() == 1);
+    assert(moved.at(0).content() == "Moving");
+    assert(moved.at(0).role() == Role::User);
+
+    assert(source.size() == 0);
+    assert(source.begin() == nullptr);
+    assert(source.begin() == source.end());
+}
 
    
 
@@ -64,6 +121,9 @@ int main() {
     test_empty_conversation();
     test_ec_bounds();
     test_order_after();
+    test_cc();
+    test_copy_assignment(); 
+    test_move_constructor();
 
     return 0;
 }
