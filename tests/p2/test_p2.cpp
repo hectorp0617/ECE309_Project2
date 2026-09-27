@@ -113,6 +113,30 @@ void test_move_constructor() {
     assert(source.begin() == source.end());
 }
 
+void test_move_assign() {
+    //Create source
+    Conversation source;
+    source.append(Message(Role::User, "Check"));        //append message
+
+    //Destination
+    Conversation destination;
+    destination.append(Message(Role::User, "old"));       //Append message
+
+    const Message* orig_addr = source.begin();      //Save Adress
+
+    destination = std::move(source);        //move contents here
+
+    //Check and ensure destination
+    assert(destination.begin() == orig_addr);
+    assert(destination.size() == 1);
+    assert(destination.at(0).content() == "Check");
+    assert(destination.at(0).role() == Role::User);
+
+    // Check source.
+    assert(source.size() == 0);
+    assert(source.begin() == nullptr);
+    assert(source.begin() == source.end());
+}
    
 
 
@@ -124,6 +148,7 @@ int main() {
     test_cc();
     test_copy_assignment(); 
     test_move_constructor();
+    test_move_assign();
 
     return 0;
 }
